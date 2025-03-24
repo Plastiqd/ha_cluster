@@ -1,0 +1,68 @@
+---
+- name: Download etcd
+  ansible.builtin.get_url:
+    url: "https://github.com/etcd-io/etcd/releases/download/v{{ etcd_version }}/etcd-v{{ etcd_version }}-linux-amd64.tar.gz"
+    dest: "/tmp/etcd.tar.gz"
+    mode: '0644'
+
+- name: Unarchive etcd
+  ansible.builtin.unarchive:
+    src: "/tmp/etcd.tar.gz"
+    dest: "/usr/local/bin/"
+    remote_src: yes
+    extra_opts: [--strip-components=1]
+
+- name: Ensure etcd group exists
+  group:
+    name: etcd
+    state: present
+    system: true
+
+- name: Ensure etcd user exists
+  user:
+    name: etcd
+    state: present
+    group: etcd
+    shell: /sbin/nologin
+    system: true
+
+- name: Copy configure file etcd
+  ansible.builtin.template:
+    src: etcd.conf.j2
+    dest: "/etc/default/etcd"
+    owner: etcd
+    group: etcd
+    mode: '0644'
+
+- name: Create data directory etcd
+  ansible.builtin.file:
+    path: "{{ etcd_data_dir }}"
+    state: directory
+    force: true
+    mode: '0770'
+    owner: etcd
+    group: etcd
+
+- name: Copy systemd unit for etcd
+  ansible.builtin.template:
+    src: etcd.service.j2
+    dest: "/etc/systemd/system/etcd.service"
+    mode: '0644'
+  notify: Restart etcd
+
+- name: Relod systemd
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Ensure etcd is running
+  ansible.builtin.systemd:
+    name: etcd
+    enabled: yes
+    state: started
+
+- name: Update etcd configuration
+  ansible.builtin.replace:
+    path: /etc/default/etcd
+    regexp: '^ETCD_INITIAL_CLUSTER_STATE=".*"$'
+    replace: 'ETCD_INITIAL_CLUSTER_STATE="existing"'
+  notify: Restart etcd

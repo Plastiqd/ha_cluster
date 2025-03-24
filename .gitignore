@@ -1,0 +1,11 @@
+# VS Code
+.vscode/
+
+# Ansible roles vendor
+roles/vendor/
+# vagrant files
+.vagrant/
+
+# Vault
+.vault/
+vault.key

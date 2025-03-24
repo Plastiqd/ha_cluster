@@ -1,0 +1,5 @@
+---
+keepalived_vip: "192.168.56.100/32"
+keepalived_interface: "enp0s8"
+keepalived_priority_master: 100
+keepalived_priority_slave: 90

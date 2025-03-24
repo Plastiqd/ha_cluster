@@ -1,0 +1,4 @@
+192.168.56.10 db.master.lan
+192.168.56.11 db.slave.lan
+192.168.56.12 db.manager.lan
+192.168.56.100 db.test.lan

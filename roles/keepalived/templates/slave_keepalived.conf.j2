@@ -1,0 +1,15 @@
+# /etc/keepalived/keepalived.conf
+vrrp_instance VI_1 {
+    state BACKUP
+    interface {{ keepalived_interface }}
+    virtual_router_id 51
+    priority {{ keepalived_priority_slave }}
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass 1111
+    }
+    virtual_ipaddress {
+        {{ keepalived_vip }}
+    }
+}

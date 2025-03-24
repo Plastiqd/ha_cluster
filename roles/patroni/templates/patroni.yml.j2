@@ -1,0 +1,56 @@
+scope: {{ patroni_scope }}
+name: {{ inventory_hostname }}
+
+restapi:
+  listen: 0.0.0.0:8008
+  connect_address: "{{ ansible_facts['enp0s8']['ipv4']['address'] }}:8008"
+
+etcd3:
+  hosts: {{ patroni_etcd_hosts }}
+
+watchdog:
+  mode: off
+
+bootstrap:
+  dcs:
+    ttl: 30
+    loop_wait: 10
+    retry_timeout: 10
+    maximum_lag_on_failover: 1048576
+    pg_hba:
+      - local all all peer
+      - host all all 127.0.0.1/32 md5
+      - host all all 0.0.0.0/0 md5
+      - host replication replicator 127.0.0.1/32 md5
+      - host replication replicator 0.0.0.0/0 md5
+  
+  initdb:
+    - encoding: UTF8
+    - data-checksums
+
+postgresql:
+  listen: "0.0.0.0:{{ postgres_port }}"
+  connect_address: "{{ ansible_facts['enp0s8']['ipv4']['address'] }}:{{ postgres_port }}"
+  data_dir: {{ patroni_data_dir }}
+  bin_dir: {{ patroni_bin_dir }}
+  pgpass: "/data/postgresql/14/.pgpass"
+  pg_hba:
+    - host all all 127.0.0.1/32 md5
+    - host all all 0.0.0.0/0 md5
+    - host replication replicator 127.0.0.1/32 md5
+    - host replication replicator 0.0.0.0/0 md5
+  authentication:
+    superuser:
+      username: {{ postgresql_superuser }}
+      password: {{ postgresql_password }}
+    replication:
+      username: {{ postgresql_replication_user }}
+      password: {{ postgresql_replication_password }}
+  parameters:
+    max_connections: 100
+
+tags:
+  nofailover: false
+  noloadbalance: false
+  clonefrom: false
+  nosync: false

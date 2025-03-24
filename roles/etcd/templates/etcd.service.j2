@@ -1,0 +1,14 @@
+[Unit]
+Description=etcd - highly-available key value store
+After=network.target
+
+[Service]
+Type=notify
+User=root
+EnvironmentFile=-/etc/default/etcd
+ExecStart=/usr/local/bin/etcd
+Restart=always
+LimitNOFILE=40000
+
+[Install]
+WantedBy=multi-user.target

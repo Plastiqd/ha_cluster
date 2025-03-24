@@ -1,0 +1,62 @@
+---
+- name: Install PostgreSQL
+  ansible.builtin.apt:
+    name: "postgresql-{{ postgresql_version }}"
+    state: present
+    update_cache: yes
+
+- name: Stopped PostgreSQL
+  ansible.builtin.systemd:
+    name: postgresql
+    state: stopped
+    enabled: false
+
+- name: Install dependencies
+  ansible.builtin.apt:
+    update_cache: yes
+    name:
+      - python3-pip
+      - python3-etcd
+      - python3-psycopg2
+    state: present
+
+- name: Install Patroni
+  ansible.builtin.pip:
+    name: "patroni"
+    state: present
+
+- name: Create Patroni directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ patroni_user }}"
+    group: "{{ patroni_user }}"
+    mode: '0700'
+  loop:
+    - "{{ patroni_data_dir }}"
+    - "{{ patroni_log_dir }}"
+    - "{{ patroni_etc_dir }}"
+
+- name: Deploy Patroni configuration
+  ansible.builtin.template:
+    src: patroni.yml.j2
+    dest: "/etc/patroni/patroni.yml"
+    owner: "{{ patroni_user }}"
+    group: "{{ patroni_user }}"
+    mode: '0644'
+
+- name: Copy systemd unit for patroni
+  ansible.builtin.template:
+    src: patroni.service.j2
+    dest: "/etc/systemd/system/patroni.service"
+    mode: '0644'
+
+- name: Relod systemd
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Enable and start Patroni
+  ansible.builtin.systemd:
+    name: patroni
+    state: started
+    enabled: yes

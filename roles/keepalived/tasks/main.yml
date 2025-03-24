@@ -1,0 +1,32 @@
+---
+- name: Install Keepalived
+  ansible.builtin.apt:
+    name: "keepalived"
+    state: present
+  notify: Restart Keepalived
+
+- name: Deploy Keepalived configuration for master node
+  ansible.builtin.template:
+    src: master_keepalived.conf.j2
+    dest: "/etc/keepalived/keepalived.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  when: inventory_hostname == 'master'
+  notify: Restart Keepalived
+
+- name: Deploy Keepalived configuration for slave node
+  ansible.builtin.template:
+    src: slave_keepalived.conf.j2
+    dest: "/etc/keepalived/keepalived.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  when: inventory_hostname == 'slave'
+  notify: Restart Keepalived
+
+- name: Ensure Keepalived is running
+  ansible.builtin.systemd:
+    name: keepalived
+    state: started
+    enabled: yes

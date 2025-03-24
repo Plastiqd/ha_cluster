@@ -1,0 +1,30 @@
+---
+- name: Run etcd role
+  hosts: etcd
+  become: yes
+  roles:
+    - etcd
+
+- name: Run patroni role for master
+  hosts: master
+  become: yes
+  roles:
+    - patroni
+
+- name: Run patroni role for slave
+  hosts: slave
+  become: yes
+  roles:
+    - patroni
+
+- name: Run keepalived role
+  hosts: keepalived
+  become: yes
+  roles:
+    - keepalived
+
+- name: Run haproxy role
+  hosts: haproxy
+  become: yes
+  roles:
+    - haproxy

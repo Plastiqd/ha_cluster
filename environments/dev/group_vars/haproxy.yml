@@ -1,0 +1,5 @@
+---
+haproxy_virtual_ip: "192.168.56.100"
+haproxy_master_ip: "192.168.56.10"
+haproxy_slave_ip: "192.168.56.11"
+haproxy_postgres_port: 5432

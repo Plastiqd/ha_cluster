@@ -1,0 +1,51 @@
+global
+  log /dev/log local0
+  log /dev/log local1 notice
+  maxconn 200
+
+defaults
+  log     global
+  option  tcplog
+  timeout connect 5000ms
+  timeout client  50000ms
+  timeout server  50000ms
+
+listen stats
+  mode http
+  bind *:9000
+  stats enable
+  stats uri /
+  stats realm Haproxy\ Statistics
+  stats auth admin:admin
+
+frontend master
+	bind 0.0.0.0:5433
+	mode tcp
+	default_backend master_back
+
+backend master_back
+	mode tcp
+	option tcp-check
+	server master {{ haproxy_master_ip }}:{{ haproxy_postgres_port }} check port 8008 inter 5s rise 2 fall 3
+
+frontend slave
+	bind 0.0.0.0:5434
+	mode tcp
+	default_backend slave_back
+
+backend slave_back
+	mode tcp
+	option tcp-check
+	server slave {{ haproxy_slave_ip }}:{{ haproxy_postgres_port }} check port 8008 inter 5s rise 2 fall 3
+
+frontend balance
+	mode tcp 
+	bind 0.0.0.0:5435
+	default_backend pg_cluster
+
+backend pg_cluster	
+	mode tcp
+  balance roundrobin
+  option tcp-check
+	server master {{ haproxy_master_ip }}:{{ haproxy_postgres_port }} check port 8008 inter 5s rise 2 fall 3
+	server slave  {{ haproxy_slave_ip }}:{{ haproxy_postgres_port }} check port 8008 inter 5s rise 2 fall 3 backup
